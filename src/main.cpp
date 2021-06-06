@@ -21,8 +21,11 @@ See more at https://www.nxez.com
 #include "icons.h"
 #include "fonts.h"
 
+#include <DHT10.h>
+DHT10 DHT;
+
 struct {
-    String Version = "1.0.0";
+    String Version = "1.1.0";
     String ProjectID = "P231";
     String URL = "https://make.quwj.com/project/231";
     String Author = "NXEZ.com";
@@ -107,16 +110,32 @@ void updateData(OLEDDisplay *display){
 
 void updateDataDHT(){
     //DHT BEGIN
-    // read without samples.
-    int err = SimpleDHTErrSuccess;
-    Serial.print("Reading DHT22...");
-    if ((err = dht.read(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
-        Serial.print("Read DHT22 failed, err=");
-        Serial.println(err);
-        //delay(1000);
-        return;
+    if(TEMPERATURE_SENSOR_TYPE == "DHT10"){
+        Serial.print("Reading DHT10...");
+        int status = DHT.read();
+        if(status == DHT10_OK){
+            //Serial.print(DHT.humidity);
+            //Serial.print(",\t");
+            //Serial.println(DHT.temperature);  
+            Serial.println("OK");
+        }
     }
-    Serial.println("OK");
+    else if(TEMPERATURE_SENSOR_TYPE == "DHT22"){
+        // read without samples.
+        int err = SimpleDHTErrSuccess;
+        Serial.print("Reading DHT22...");
+        if ((err = dht.read(&temperature, &humidity, NULL)) != SimpleDHTErrSuccess) {
+            Serial.print("Read DHT22 failed, err=");
+            Serial.println(err);
+            //delay(1000);
+            return;
+        }
+        Serial.println("OK");
+    }
+    else{
+        Serial.println("unknown TEMPERATURE_SENSOR_TYPE");
+    }
+    //DHT END
 
     readyForDHTUpdate = false;
 }
@@ -146,7 +165,16 @@ void drawTempHumi(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
     display->setFont(ArialMT_Plain_10);
     display->drawString(64 + x, 0 + y, "- Indoor Sensor -");
 
-    sprintf(temp_str, "%d C   %d %%", (int)temperature, (int)humidity);
+    if(TEMPERATURE_SENSOR_TYPE == "DHT10"){
+        sprintf(temp_str, "%d C   %d %%", (int)DHT.temperature, (int)DHT.humidity);
+    }
+    else if(TEMPERATURE_SENSOR_TYPE == "DHT22"){
+        sprintf(temp_str, "%d C   %d %%", (int)temperature, (int)humidity);
+    }
+    else{
+        Serial.println("unknown TEMPERATURE_SENSOR_TYPE");
+    }
+
     display->setTextAlignment(TEXT_ALIGN_CENTER);
     display->setFont(ArialMT_Plain_16);
     display->drawString(x+64, y+16, temp_str);
@@ -159,7 +187,16 @@ void drawTempHumi(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
 void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState *state){
     char time_str[11];
     char temp_str[20];
-    sprintf(temp_str, "%d°C H:%d%%", (int)temperature, (int)humidity);
+
+    if(TEMPERATURE_SENSOR_TYPE == "DHT10"){
+        sprintf(temp_str, "%d°C H:%d%%", (int)DHT.temperature, (int)DHT.humidity);
+    }
+    else if(TEMPERATURE_SENSOR_TYPE == "DHT22"){
+        sprintf(temp_str, "%d°C H:%d%%", (int)temperature, (int)humidity);
+    }
+    else{
+        Serial.println("unknown TEMPERATURE_SENSOR_TYPE");
+    }
 
     display->setFont(ArialMT_Plain_10);
 
@@ -214,6 +251,12 @@ void setup(){
     clientId.toUpperCase();
     Serial.println("clientId: " + (String)(clientId.c_str()));
 
+    if(TEMPERATURE_SENSOR_TYPE == "DHT10"){
+        DHT.begin();
+        Serial.print("DHT10 library version: ");
+        Serial.println(DHT10_VERSION);
+    }
+
     // initialize dispaly
     display.init();
     display.setFont(ArialMT_Plain_10);
@@ -221,11 +264,11 @@ void setup(){
     drawSplash(&display, "- NXEZ CUBE -\nwww.nxez.com");
 
     pinMode(D6, OUTPUT);
-    tone(D6, 600);
+    tone(D6, 800);
     delay(100);
     tone(D6, 0);
     delay(100);
-    tone(D6, 800);
+    tone(D6, 600);
     delay(100);
     tone(D6, 0);
     delay(1500);

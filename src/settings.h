@@ -66,6 +66,9 @@ const char* WIFI_SSID = "WIFI_SSID";
 const char* WIFI_PWD = "WIFI_PWD";
 
 const boolean IS_METRIC = true;
+
+//DHT10/DHT22
+const String TEMPERATURE_SENSOR_TYPE = "DHT10";
 /***************************
  * End Settings
  **************************/
