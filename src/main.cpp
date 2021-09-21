@@ -17,6 +17,7 @@ See more at https://www.nxez.com
 #include <time.h>
 #include <WiFiUdp.h>
 
+#include "DSEG7Classic-BoldFont.h"
 #include "settings.h"
 #include "icons.h"
 #include "fonts.h"
@@ -25,7 +26,7 @@ See more at https://www.nxez.com
 DHT10 DHT;
 
 struct {
-    String Version = "1.1.0";
+    String Version = "1.2.0";
     String ProjectID = "P231";
     String URL = "https://make.quwj.com/project/231";
     String Author = "NXEZ.com";
@@ -119,6 +120,7 @@ void updateDataDHT(){
             //Serial.println(DHT.temperature);  
             Serial.println("OK");
         }
+        delay(2000);   //recommend delay 2 second 
     }
     else if(TEMPERATURE_SENSOR_TYPE == "DHT22"){
         // read without samples.
@@ -151,8 +153,9 @@ void drawDateTime(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
     PSTR("%03s %03s %02u %04u"),
     wdayName[now.dayOfTheWeek()], monName[now.month() - 1],
     now.day(), now.year());
+    int textWidth = display->getStringWidth(date_str);
     display->drawString(64 + x, 2 + y, date_str);
-    display->setFont(ArialMT_Plain_24);
+    display->setFont(DSEG7_Classic_Bold_21);
 
     sprintf(time_str, "%02d:%02d:%02d", now.hour(),now.minute(),now.second());
     display->drawString(64 + x, 19 + y, time_str);
@@ -166,17 +169,17 @@ void drawTempHumi(OLEDDisplay *display, OLEDDisplayUiState *state, int16_t x, in
     display->drawString(64 + x, 0 + y, "- Indoor Sensor -");
 
     if(TEMPERATURE_SENSOR_TYPE == "DHT10"){
-        sprintf(temp_str, "%d C   %d %%", (int)DHT.temperature, (int)DHT.humidity);
+        sprintf(temp_str, "%d C   %d P", (int)DHT.temperature, (int)DHT.humidity);
     }
     else if(TEMPERATURE_SENSOR_TYPE == "DHT22"){
-        sprintf(temp_str, "%d C   %d %%", (int)temperature, (int)humidity);
+        sprintf(temp_str, "%d C   %d P", (int)temperature, (int)humidity);
     }
     else{
         Serial.println("unknown TEMPERATURE_SENSOR_TYPE");
     }
 
     display->setTextAlignment(TEXT_ALIGN_CENTER);
-    display->setFont(ArialMT_Plain_16);
+    display->setFont(DSEG7_Classic_Bold_14);
     display->drawString(x+64, y+16, temp_str);
 
     display->setTextAlignment(TEXT_ALIGN_CENTER);
@@ -243,6 +246,11 @@ int8_t getWifiQuality(){
 }
 
 void setup(){
+    if(TEMPERATURE_SENSOR_TYPE == "DHT10"){
+        DHT.begin();
+        delay(500);
+    }
+
     WiFi.mode(WIFI_STA);
     Serial.begin(115200);
     Serial.println();
@@ -250,12 +258,6 @@ void setup(){
     clientId += String(ESP.getChipId(), HEX);
     clientId.toUpperCase();
     Serial.println("clientId: " + (String)(clientId.c_str()));
-
-    if(TEMPERATURE_SENSOR_TYPE == "DHT10"){
-        DHT.begin();
-        Serial.print("DHT10 library version: ");
-        Serial.println(DHT10_VERSION);
-    }
 
     // initialize dispaly
     display.init();
