@@ -62,8 +62,8 @@ OLEDDisplayUi ui(&display);
 
 
 // WIFI
-const char* WIFI_SSID = "CCTV";
-const char* WIFI_PWD = "baidudotcom";
+const char* WIFI_SSID = "WIFI_SSID";
+const char* WIFI_PWD = "WIFI_PWD";
 
 const boolean IS_METRIC = true;
 
